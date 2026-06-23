@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kingdom Kids World — Praise &amp; Worship Studio</title>
+<style>
+  :root{
+    --royal:#2D0F5E;
+    --royal-deep:#1B0840;
+    --gold:#FFD700;
+    --amber:#FF8C00;
+    --cloud:#F8F4FF;
+    --green:#2ECC71;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    background:var(--royal-deep);
+    color:var(--cloud);
+    overflow:hidden;
+    position:fixed;width:100%;
+    user-select:none;-webkit-user-select:none;
+  }
+  .screen{
+    position:absolute;inset:0;
+    display:none;flex-direction:column;
+    align-items:center;justify-content:center;
+    padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
+    text-align:center;
+  }
+  .screen.active{display:flex;}
+
+  /* ====== SPLASH ====== */
+  #splash{
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(255,215,0,0.25), transparent 60%),
+      linear-gradient(180deg,var(--royal) 0%,var(--royal-deep) 100%);
+  }
+  .crown-emoji{font-size:72px;animation:floaty 3s ease-in-out infinite;}
+  @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  #splash h1{
+    font-size:clamp(28px,8vw,44px);font-weight:800;
+    color:var(--gold);margin:8px 0;letter-spacing:0.5px;
+    text-shadow:0 2px 20px rgba(255,215,0,0.4);
+  }
+  #splash .sub{font-size:18px;color:var(--cloud);opacity:0.9;margin-bottom:6px;}
+  .verse{
+    font-style:italic;max-width:420px;line-height:1.6;
+    font-size:16px;opacity:0.85;margin:18px auto;
+  }
+  .verse .ref{display:block;margin-top:6px;color:var(--gold);font-style:normal;font-weight:600;}
+
+  .btn-primary{
+    background:linear-gradient(135deg,var(--gold),var(--amber));
+    color:var(--royal-deep);border:none;
+    font-size:22px;font-weight:800;
+    padding:18px 48px;border-radius:50px;
+    margin-top:24px;cursor:pointer;
+    box-shadow:0 8px 24px rgba(255,140,0,0.45);
+    min-height:64px;min-width:200px;
+    transition:transform 0.15s;
+  }
+  .btn-primary:active{transform:scale(0.94);}
+
+  /* ====== CHARACTER SELECT ====== */
+  #charSelect{
+    background:linear-gradient(180deg,var(--royal) 0%,var(--royal-deep) 100%);
+    justify-content:flex-start;padding-top:40px;
+  }
+  .screen-title{
+    font-size:clamp(22px,6vw,32px);font-weight:800;color:var(--gold);
+    margin:12px 0 4px;
+  }
+  .screen-hint{font-size:16px;opacity:0.85;margin-bottom:24px;}
+  .char-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:16px;
+    width:100%;max-width:420px;
+  }
+  .char-card{
+    background:rgba(255,255,255,0.08);
+    border:3px solid transparent;
+    border-radius:24px;padding:20px 12px;
+    cursor:pointer;transition:transform 0.15s,border-color 0.2s;
+    min-height:160px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:8px;
+  }
+  .char-card:active{transform:scale(0.95);}
+  .char-card.selected{border-color:var(--gold);background:rgba(255,215,0,0.15);}
+  .char-face{font-size:56px;line-height:1;}
+  .char-name{font-size:18px;font-weight:700;}
+  .char-robe{font-size:13px;opacity:0.8;}
+
+  /* ====== STUDIO ====== */
+  #studio{
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(255,215,0,0.18), transparent 55%),
+      linear-gradient(180deg,#3A1578 0%,var(--royal-deep) 100%);
+    justify-content:flex-start;padding:0;
+  }
+  .studio-top{
+    width:100%;display:flex;justify-content:space-between;align-items:center;
+    padding:max(12px,env(safe-area-inset-top)) 16px 8px;
+  }
+  .chest-btn{
+    background:rgba(255,255,255,0.12);border:none;color:var(--cloud);
+    border-radius:30px;padding:10px 16px;font-size:15px;font-weight:700;
+    cursor:pointer;display:flex;align-items:center;gap:6px;min-height:44px;
+  }
+  .chest-btn:active{transform:scale(0.93);}
+  .home-btn{
+    background:rgba(255,255,255,0.12);border:none;color:var(--cloud);
+    border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;
+  }
+  /* Throne presence */
+  .throne-wrap{
+    position:relative;display:flex;flex-direction:column;align-items:center;
+    margin-top:4px;
+  }
+  .throne-glow{
+    width:160px;height:160px;border-radius:50%;
+    background:radial-gradient(circle, rgba(255,215,0,0.9) 0%, rgba(255,140,0,0.5) 40%, transparent 70%);
+    filter:blur(4px);
+    transition:transform 0.4s ease, opacity 0.4s ease;
+    transform:scale(0.55);opacity:0.5;
+    animation:thronePulse 3s ease-in-out infinite;
+  }
+  @keyframes thronePulse{0%,100%{filter:blur(4px)}50%{filter:blur(10px)}}
+  .throne-label{
+    margin-top:-6px;font-size:14px;color:var(--gold);font-weight:600;opacity:0.9;
+  }
+  .throne-icon{
+    position:absolute;top:54px;font-size:44px;
+    pointer-events:none;
+  }
+  /* Stage with team */
+  .stage{
+    display:flex;justify-content:center;gap:6px;flex-wrap:wrap;
+    margin:10px 0;min-height:60px;align-items:flex-end;
+  }
+  .team-member{font-size:34px;animation:sway 2.5s ease-in-out infinite;}
+  .team-member:nth-child(even){animation-delay:0.6s;}
+  @keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+
+  /* Instrument row */
+  .section-label{font-size:14px;text-transform:uppercase;letter-spacing:1px;opacity:0.7;margin:6px 0;}
+  .instrument-row{
+    display:flex;justify-content:center;gap:12px;flex-wrap:wrap;padding:0 12px;
+  }
+  .inst-btn{
+    background:rgba(255,255,255,0.1);border:3px solid rgba(255,215,0,0.3);
+    border-radius:20px;width:78px;height:78px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;transition:transform 0.1s,border-color 0.2s,background 0.2s;
+  }
+  .inst-btn:active{transform:scale(0.9);}
+  .inst-btn.active{border-color:var(--gold);background:rgba(255,215,0,0.2);}
+  .inst-btn.locked{opacity:0.4;}
+  .inst-emoji{font-size:30px;}
+  .inst-name{font-size:10px;font-weight:600;line-height:1.1;}
+
+  /* Song selector */
+  .song-row{
+    display:flex;gap:10px;overflow-x:auto;padding:8px 16px;width:100%;
+    scrollbar-width:none;
+  }
+  .song-row::-webkit-scrollbar{display:none;}
+  .song-chip{
+    flex:0 0 auto;background:rgba(255,255,255,0.1);
+    border:2px solid transparent;border-radius:30px;
+    padding:12px 18px;font-size:14px;font-weight:700;cursor:pointer;
+    white-space:nowrap;min-height:48px;
+  }
+  .song-chip.selected{border-color:var(--gold);background:rgba(255,215,0,0.18);}
+
+  /* Beat zone */
+  .beat-zone{
+    width:100%;flex:1;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;min-height:120px;
+  }
+  .beat-target{
+    width:120px;height:120px;border-radius:50%;
+    border:5px solid var(--gold);
+    display:flex;align-items:center;justify-content:center;
+    font-size:46px;cursor:pointer;
+    transition:transform 0.1s;
+    background:rgba(255,215,0,0.08);
+  }
+  .beat-target.pulse{animation:beatPulse 0.5s ease;}
+  @keyframes beatPulse{0%{transform:scale(1)}40%{transform:scale(1.25);background:rgba(255,215,0,0.35)}100%{transform:scale(1)}}
+  .beat-text{font-size:16px;opacity:0.85;height:22px;}
+  .lead-btn{
+    background:linear-gradient(135deg,var(--gold),var(--amber));
+    color:var(--royal-deep);border:none;font-size:20px;font-weight:800;
+    padding:16px 40px;border-radius:50px;cursor:pointer;
+    box-shadow:0 6px 20px rgba(255,140,0,0.4);min-height:60px;
+    margin-bottom:12px;transition:transform 0.15s;
+  }
+  .lead-btn:active{transform:scale(0.94);}
+  .lead-btn:disabled{opacity:0.5;}
+
+  /* ====== SCRIPTURE REVEAL ====== */
+  #scripture{
+    background:radial-gradient(ellipse at 50% 40%, rgba(255,215,0,0.3), transparent 65%),var(--royal-deep);
+  }
+  .scripture-card{
+    background:linear-gradient(160deg,#fff8e1,#ffe9b0);
+    color:var(--royal-deep);border-radius:28px;
+    padding:36px 26px;max-width:440px;width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    animation:slideUp 0.6s ease;
+  }
+  @keyframes slideUp{from{transform:translateY(60px);opacity:0}to{transform:translateY(0);opacity:1}}
+  .scripture-card .key-icon{font-size:44px;}
+  .scripture-text{
+    font-size:22px;line-height:1.55;font-weight:600;margin:16px 0;
+    font-family:Georgia,"Times New Roman",serif;
+  }
+  .scripture-ref{font-size:18px;font-weight:800;color:var(--amber);}
+  .receive-btn{
+    background:var(--royal);color:var(--gold);border:none;
+    font-size:18px;font-weight:800;padding:14px 36px;border-radius:40px;
+    margin-top:22px;cursor:pointer;min-height:56px;
+  }
+  .receive-btn:active{transform:scale(0.94);}
+
+  /* ====== CROWN CHEST ====== */
+  #chest{
+    background:linear-gradient(180deg,var(--royal) 0%,var(--royal-deep) 100%);
+    justify-content:flex-start;padding-top:40px;
+  }
+  .chest-progress{font-size:16px;opacity:0.9;margin-bottom:18px;}
+  .keys-grid{
+    display:grid;grid-template-columns:1fr;gap:12px;width:100%;max-width:440px;
+    overflow-y:auto;padding-bottom:90px;
+  }
+  .key-card{
+    background:rgba(255,255,255,0.08);border-radius:18px;
+    padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;
+    border-left:5px solid var(--gold);text-align:left;
+  }
+  .key-card:active{background:rgba(255,215,0,0.12);}
+  .key-card .ki{font-size:30px;}
+  .key-card .kref{font-weight:800;color:var(--gold);font-size:16px;}
+  .key-card .ktext{font-size:13px;opacity:0.85;line-height:1.4;margin-top:3px;}
+  .key-empty{opacity:0.4;font-style:italic;padding:30px;text-align:center;}
+
+  /* ====== PARENT AREA ====== */
+  #parent{background:linear-gradient(180deg,var(--royal) 0%,var(--royal-deep) 100%);justify-content:flex-start;padding-top:40px;}
+  .pin-display{
+    font-size:32px;letter-spacing:12px;margin:18px 0;height:40px;color:var(--gold);
+  }
+  .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:280px;width:100%;}
+  .pin-key{
+    background:rgba(255,255,255,0.1);border:none;color:var(--cloud);
+    font-size:26px;font-weight:700;border-radius:16px;padding:18px;cursor:pointer;
+    min-height:64px;
+  }
+  .pin-key:active{background:rgba(255,215,0,0.2);}
+  .parent-stats{max-width:440px;width:100%;text-align:left;}
+  .stat-row{
+    display:flex;justify-content:space-between;padding:14px 4px;
+    border-bottom:1px solid rgba(255,255,255,0.12);font-size:17px;
+  }
+  .stat-row .val{font-weight:800;color:var(--gold);}
+  .danger-btn{
+    background:transparent;border:2px solid #ff6b6b;color:#ff6b6b;
+    border-radius:40px;padding:12px 28px;font-size:15px;font-weight:700;
+    margin-top:24px;cursor:pointer;min-height:48px;
+  }
+
+  /* bottom nav for studio */
+  .studio-bottom{width:100%;display:flex;flex-direction:column;align-items:center;}
+
+  /* generic back */
+  .back-bar{
+    position:absolute;top:max(12px,env(safe-area-inset-top));left:16px;
+    background:rgba(255,255,255,0.12);border:none;color:var(--cloud);
+    border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;z-index:5;
+  }
+  .gear-bar{
+    position:absolute;top:max(12px,env(safe-area-inset-top));right:16px;
+    background:rgba(255,255,255,0.12);border:none;color:var(--cloud);
+    border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;z-index:5;
+  }
+  .toast{
+    position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--green);color:#fff;padding:14px 26px;border-radius:40px;
+    font-weight:700;font-size:16px;opacity:0;transition:all 0.4s;z-index:50;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+</style>
+</head>
+<body>
+
+<!-- ============ SPLASH ============ -->
+<div id="splash" class="screen active">
+  <div class="crown-emoji">👑</div>
+  <h1>Kingdom Kids World</h1>
+  <div class="sub">Praise &amp; Worship Studio</div>
+  <div class="verse">
+    "Let every thing that hath breath praise the LORD. Praise ye the LORD."
+    <span class="ref">— Psalm 150:6 (KJV)</span>
+  </div>
+  <button class="btn-primary" onclick="App.start()">Enter the Studio</button>
+  <button class="gear-bar" onclick="App.goParent()" aria-label="Parent area">⚙️</button>
+</div>
+
+<!-- ============ CHARACTER SELECT ============ -->
+<div id="charSelect" class="screen">
+  <button class="back-bar" onclick="App.show('splash')" aria-label="Back">←</button>
+  <div class="screen-title">Choose Your Worshipper</div>
+  <div class="screen-hint">Who will lead worship today?</div>
+  <div class="char-grid" id="charGrid"></div>
+  <button class="btn-primary" id="charContinue" onclick="App.enterStudio()" style="display:none;">Let's Worship!</button>
+</div>
+
+<!-- ============ STUDIO ============ -->
+<div id="studio" class="screen">
+  <div class="studio-top">
+    <button class="home-btn" onclick="App.show('splash')" aria-label="Home">🏠</button>
+    <button class="chest-btn" onclick="App.goChest()">👑 <span id="keyCount">0</span> Keys</button>
+  </div>
+
+  <div class="throne-wrap">
+    <div class="throne-glow" id="throneGlow"></div>
+    <div class="throne-icon">✨</div>
+    <div class="throne-label" id="throneLabel">The King is on His throne</div>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+  <div class="section-label">Pick Your Instrument</div>
+  <div class="instrument-row" id="instrumentRow"></div>
+
+  <div class="section-label">Pick a Song</div>
+  <div class="song-row" id="songRow"></div>
+
+  <div class="studio-bottom">
+    <div class="beat-zone">
+      <div class="beat-target" id="beatTarget" onclick="App.tapBeat()">🙌</div>
+      <div class="beat-text" id="beatText">Choose a song, then lead worship</div>
+    </div>
+    <button class="lead-btn" id="leadBtn" onclick="App.leadWorship()">▶ Lead Worship</button>
+  </div>
+</div>
+
+<!-- ============ SCRIPTURE REVEAL ============ -->
+<div id="scripture" class="screen">
+  <div class="scripture-card">
+    <div class="key-icon">🗝️</div>
+    <div class="scripture-text" id="scriptureText"></div>
+    <div class="scripture-ref" id="scriptureRef"></div>
+    <button class="receive-btn" onclick="App.receiveWord()">Receive the Word ✨</button>
+  </div>
+</div>
+
+<!-- ============ CROWN CHEST ============ -->
+<div id="chest" class="screen">
+  <button class="back-bar" onclick="App.backToStudio()" aria-label="Back">←</button>
+  <div class="screen-title">👑 Crown Chest</div>
+  <div class="chest-progress" id="chestProgress"></div>
+  <div class="keys-grid" id="keysGrid"></div>
+</div>
+
+<!-- ============ PARENT AREA ============ -->
+<div id="parent" class="screen">
+  <button class="back-bar" onclick="App.exitParent()" aria-label="Back">←</button>
+  <div class="screen-title">Parent Area</div>
+  <div id="pinSection">
+    <div class="screen-hint" id="pinHint">Enter your PIN</div>
+    <div class="pin-display" id="pinDisplay"></div>
+    <div class="pin-pad" id="pinPad"></div>
+  </div>
+  <div id="parentDash" style="display:none;width:100%;max-width:440px;">
+    <div class="parent-stats">
+      <div class="stat-row"><span>Worship Sessions</span><span class="val" id="stSessions">0</span></div>
+      <div class="stat-row"><span>Scriptures Collected</span><span class="val" id="stKeys">0</span></div>
+      <div class="stat-row"><span>Instruments Unlocked</span><span class="val" id="stInst">0</span></div>
+      <div class="stat-row"><span>Favorite Instrument</span><span class="val" id="stFav">—</span></div>
+    </div>
+    <div style="text-align:center;">
+      <button class="danger-btn" onclick="App.resetProgress()">Reset All Progress</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* =========================================================
+   KINGDOM KIDS WORLD — Praise & Worship Studio (Phase 1)
+   Single-file. Vanilla JS. localStorage. iOS-safe TTS + audio.
+   ========================================================= */
+
+const STORAGE_KEY = "kkw_praise_v1";
+
+/* ---------- DATA ---------- */
+const CHARACTERS = [
+  {id:"anu",    face:"👧🏽", name:"Anu",      robe:"Praise Dress"},
+  {id:"dominion",face:"👦🏽", name:"Dominion", robe:"Royal Robe"},
+  {id:"flagboy", face:"🧒🏼", name:"Warrior",  robe:"Armor of God"},
+  {id:"flaggirl",face:"👧🏼", name:"Dancer",   robe:"Worship Flags"}
+];
+
+const TEAM = ["🎺","💃","🎻","🚩","🎶"]; // Gabriel, Miriam, David, Deborah, Asaph
+
+const INSTRUMENTS = [
+  {id:"tambourine", emoji:"🪘", name:"Miriam's\nTambourine", unlock:0, freq:[523,659], type:"perc"},
+  {id:"harp",       emoji:"🎻", name:"David's\nHarp",         unlock:1, freq:[392,494,587], type:"string"},
+  {id:"drum",       emoji:"🥁", name:"Praise\nDrum",          unlock:3, freq:[131,165], type:"perc"}
+];
+
+const SONGS = [
+  {id:"hallelujah", title:"Hallelujah, Praise the Lord", scripture:0},
+  {id:"holy",       title:"Holy, Holy, Holy",            scripture:1},
+  {id:"thisday",    title:"This Is the Day",             scripture:2}
+];
+
+const SCRIPTURES = [
+  {ref:"Psalm 150:1", text:"Praise ye the LORD. Praise God in his sanctuary: praise him in the firmament of his power."},
+  {ref:"Isaiah 6:3",  text:"Holy, holy, holy, is the LORD of hosts: the whole earth is full of his glory."},
+  {ref:"Psalm 118:24",text:"This is the day which the LORD hath made; we will rejoice and be glad in it."},
+  {ref:"Psalm 34:1",  text:"I will bless the LORD at all times: his praise shall continually be in my mouth."},
+  {ref:"Psalm 47:1",  text:"O clap your hands, all ye people; shout unto God with the voice of triumph."}
+];
+
+/* ---------- STATE ---------- */
+let state = {
+  character:null,
+  sessions:0,
+  keys:[],            // array of scripture indices collected
+  instUses:{},        // instrument id -> count
+  parentPin:null
+};
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ state = Object.assign(state, JSON.parse(raw)); }
+  }catch(e){ console.warn("load failed",e); }
+}
+function save(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ console.warn("save failed",e); }
+}
+
+/* ---------- AUDIO (iOS-safe, gesture-gated) ---------- */
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
+    catch(e){ audioCtx = null; }
+  }
+  if(audioCtx && audioCtx.state === "suspended"){ audioCtx.resume(); }
+  return audioCtx;
+}
+function playTone(freqs, dur){
+  const ctx = ensureAudio();
+  if(!ctx) return;
+  const now = ctx.currentTime;
+  freqs.forEach((f,i)=>{
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.value = f;
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.25, now+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now+dur);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(now + i*0.04);
+    osc.stop(now + dur + i*0.04);
+  });
+}
+
+/* ---------- TTS (safeSpeak pattern) ---------- */
+function safeSpeak(text){
+  try{
+    if(!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.9; u.pitch = 1.05; u.volume = 1;
+    window.speechSynthesis.speak(u);
+  }catch(e){ console.warn("tts failed",e); }
+}
+
+/* ---------- APP ---------- */
+const App = {
+  selectedInstrument:null,
+  selectedSong:null,
+  worshipActive:false,
+  beatTimer:null,
+  beatCount:0,
+  pendingScripture:null,
+  pinEntry:"",
+  pinMode:"enter",   // "enter" | "set" | "confirm"
+  pinFirst:"",
+
+  init(){
+    load();
+    this.renderCharacters();
+    this.updateKeyCount();
+    this.buildPinPad();
+  },
+
+  show(id){
+    document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+    const el = document.getElementById(id);
+    if(el) el.classList.add("active");
+  },
+
+  toast(msg){
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(this._toastT);
+    this._toastT = setTimeout(()=>t.classList.remove("show"), 2200);
+  },
+
+  start(){
+    ensureAudio();
+    this.show("charSelect");
+  },
+
+  /* ----- CHARACTER SELECT ----- */
+  renderCharacters(){
+    const grid = document.getElementById("charGrid");
+    grid.innerHTML = "";
+    CHARACTERS.forEach(c=>{
+      const card = document.createElement("div");
+      card.className = "char-card";
+      if(state.character === c.id) card.classList.add("selected");
+      card.innerHTML =
+        '<div class="char-face">'+c.face+'</div>'+
+        '<div class="char-name">'+c.name+'</div>'+
+        '<div class="char-robe">'+c.robe+'</div>';
+      card.addEventListener("click", ()=>{
+        state.character = c.id;
+        save();
+        this.renderCharacters();
+        document.getElementById("charContinue").style.display = "inline-block";
+      });
+      grid.appendChild(card);
+    });
+    if(state.character){
+      document.getElementById("charContinue").style.display = "inline-block";
+    }
+  },
+
+  enterStudio(){
+    if(!state.character){ this.toast("Pick a worshipper first"); return; }
+    this.buildStudio();
+    this.show("studio");
+  },
+
+  /* ----- STUDIO ----- */
+  buildStudio(){
+    // stage / team
+    const stage = document.getElementById("stage");
+    stage.innerHTML = "";
+    TEAM.forEach(t=>{
+      const m = document.createElement("div");
+      m.className = "team-member";
+      m.textContent = t;
+      stage.appendChild(m);
+    });
+    // instruments
+    const row = document.getElementById("instrumentRow");
+    row.innerHTML = "";
+    INSTRUMENTS.forEach(inst=>{
+      const unlocked = state.sessions >= inst.unlock;
+      const btn = document.createElement("div");
+      btn.className = "inst-btn" + (unlocked ? "" : " locked");
+      btn.innerHTML =
+        '<div class="inst-emoji">'+(unlocked ? inst.emoji : "🔒")+'</div>'+
+        '<div class="inst-name">'+inst.name.replace(/\n/g,"<br>")+'</div>';
+      if(unlocked){
+        btn.addEventListener("click", ()=>{
+          this.selectedInstrument = inst;
+          playTone(inst.freq, 0.4);
+          document.querySelectorAll(".inst-btn").forEach(b=>b.classList.remove("active"));
+          btn.classList.add("active");
+        });
+      }else{
+        btn.addEventListener("click", ()=>{
+          this.toast("Unlocks after "+inst.unlock+" sessions");
+        });
+      }
+      row.appendChild(btn);
+    });
+    // songs
+    const sr = document.getElementById("songRow");
+    sr.innerHTML = "";
+    SONGS.forEach(song=>{
+      const chip = document.createElement("div");
+      chip.className = "song-chip";
+      chip.textContent = song.title;
+      chip.addEventListener("click", ()=>{
+        this.selectedSong = song;
+        document.querySelectorAll(".song-chip").forEach(c=>c.classList.remove("selected"));
+        chip.classList.add("selected");
+        document.getElementById("beatText").textContent = '"'+song.title+'" — tap Lead Worship';
+      });
+      sr.appendChild(chip);
+    });
+    this.updateKeyCount();
+    this.resetThrone();
+  },
+
+  resetThrone(){
+    const g = document.getElementById("throneGlow");
+    g.style.transform = "scale(0.55)";
+    g.style.opacity = "0.5";
+    document.getElementById("throneLabel").textContent = "The King is on His throne";
+  },
+
+  updateKeyCount(){
+    const el = document.getElementById("keyCount");
+    if(el) el.textContent = state.keys.length;
+  },
+
+  leadWorship(){
+    if(this.worshipActive) return;
+    if(!this.selectedInstrument){ this.toast("Pick an instrument first"); return; }
+    if(!this.selectedSong){ this.toast("Pick a song first"); return; }
+    ensureAudio();
+    this.worshipActive = true;
+    this.beatCount = 0;
+    document.getElementById("leadBtn").disabled = true;
+    document.getElementById("beatText").textContent = "Tap the 🙌 with the beat!";
+    const total = 8;
+    this.beatTimer = setInterval(()=>{
+      this.beatCount++;
+      // auto-play instrument tone as the "beat" cue
+      playTone(this.selectedInstrument.freq, 0.3);
+      const target = document.getElementById("beatTarget");
+      target.classList.remove("pulse"); void target.offsetWidth; target.classList.add("pulse");
+      // grow throne
+      this.growThrone(this.beatCount/total);
+      if(this.beatCount >= total){
+        this.endWorship();
+      }
+    }, 700);
+  },
+
+  tapBeat(){
+    if(!this.worshipActive){
+      if(this.selectedInstrument){ playTone(this.selectedInstrument.freq,0.3); }
+      return;
+    }
+    if(this.selectedInstrument) playTone(this.selectedInstrument.freq, 0.25);
+    const target = document.getElementById("beatTarget");
+    target.classList.remove("pulse"); void target.offsetWidth; target.classList.add("pulse");
+  },
+
+  growThrone(progress){
+    const g = document.getElementById("throneGlow");
+    const scale = 0.55 + progress*0.85;   // up to ~1.4
+    const op = 0.5 + progress*0.5;         // up to 1.0
+    g.style.transform = "scale("+scale.toFixed(2)+")";
+    g.style.opacity = op.toFixed(2);
+    const labels = ["The King is on His throne","His presence is here","Heaven is rejoicing","Glory is filling the room!"];
+    const idx = Math.min(labels.length-1, Math.floor(progress*labels.length));
+    document.getElementById("throneLabel").textContent = labels[idx];
+  },
+
+  endWorship(){
+    clearInterval(this.beatTimer);
+    this.worshipActive = false;
+    document.getElementById("leadBtn").disabled = false;
+    document.getElementById("beatText").textContent = "Beautiful worship! 🎉";
+    // record stats
+    state.sessions++;
+    const iid = this.selectedInstrument.id;
+    state.instUses[iid] = (state.instUses[iid]||0)+1;
+    save();
+    // scripture reveal
+    const scrIdx = this.selectedSong.scripture;
+    this.pendingScripture = scrIdx;
+    setTimeout(()=>this.showScripture(scrIdx), 900);
+  },
+
+  /* ----- SCRIPTURE ----- */
+  showScripture(idx){
+    const s = SCRIPTURES[idx];
+    document.getElementById("scriptureText").textContent = '"'+s.text+'"';
+    document.getElementById("scriptureRef").textContent = "— "+s.ref+" (KJV)";
+    this.show("scripture");
+    setTimeout(()=>safeSpeak(s.text), 400);
+  },
+
+  receiveWord(){
+    const idx = this.pendingScripture;
+    if(idx !== null && state.keys.indexOf(idx) === -1){
+      state.keys.push(idx);
+      save();
+      this.toast("🗝️ New Praise Key collected!");
+    }else{
+      this.toast("Word received ✨");
+    }
+    this.updateKeyCount();
+    this.buildStudio();
+    this.show("studio");
+  },
+
+  /* ----- CROWN CHEST ----- */
+  goChest(){
+    this.renderChest();
+    this.show("chest");
+  },
+  backToStudio(){ this.show("studio"); },
+
+  renderChest(){
+    document.getElementById("chestProgress").textContent =
+      "You have "+state.keys.length+" of "+SCRIPTURES.length+" Praise Keys";
+    const grid = document.getElementById("keysGrid");
+    grid.innerHTML = "";
+    if(state.keys.length === 0){
+      grid.innerHTML = '<div class="key-empty">Lead worship to collect your first Praise Key! 🗝️</div>';
+      return;
+    }
+    state.keys.forEach(i=>{
+      const s = SCRIPTURES[i];
+      const card = document.createElement("div");
+      card.className = "key-card";
+      card.innerHTML =
+        '<div class="ki">🗝️</div>'+
+        '<div><div class="kref">'+s.ref+'</div>'+
+        '<div class="ktext">'+s.text+'</div></div>';
+      card.addEventListener("click", ()=>safeSpeak(s.text));
+      grid.appendChild(card);
+    });
+  },
+
+  /* ----- PARENT AREA ----- */
+  goParent(){
+    this.pinEntry = "";
+    this.pinFirst = "";
+    if(state.parentPin){
+      this.pinMode = "enter";
+      document.getElementById("pinHint").textContent = "Enter your PIN";
+    }else{
+      this.pinMode = "set";
+      document.getElementById("pinHint").textContent = "Create a 4-digit parent PIN";
+    }
+    document.getElementById("pinSection").style.display = "block";
+    document.getElementById("parentDash").style.display = "none";
+    this.updatePinDisplay();
+    this.show("parent");
+  },
+
+  buildPinPad(){
+    const pad = document.getElementById("pinPad");
+    pad.innerHTML = "";
+    ["1","2","3","4","5","6","7","8","9","C","0","⌫"].forEach(k=>{
+      const b = document.createElement("button");
+      b.className = "pin-key";
+      b.textContent = k;
+      b.addEventListener("click", ()=>this.pinPress(k));
+      pad.appendChild(b);
+    });
+  },
+
+  pinPress(k){
+    if(k === "C"){ this.pinEntry = ""; this.updatePinDisplay(); return; }
+    if(k === "⌫"){ this.pinEntry = this.pinEntry.slice(0,-1); this.updatePinDisplay(); return; }
+    if(this.pinEntry.length >= 4) return;
+    this.pinEntry += k;
+    this.updatePinDisplay();
+    if(this.pinEntry.length === 4){ setTimeout(()=>this.pinSubmit(), 200); }
+  },
+
+  updatePinDisplay(){
+    document.getElementById("pinDisplay").textContent =
+      "•".repeat(this.pinEntry.length) + "‌".repeat(0);
+  },
+
+  pinSubmit(){
+    if(this.pinMode === "set"){
+      this.pinFirst = this.pinEntry;
+      this.pinEntry = "";
+      this.pinMode = "confirm";
+      document.getElementById("pinHint").textContent = "Confirm your PIN";
+      this.updatePinDisplay();
+      return;
+    }
+    if(this.pinMode === "confirm"){
+      if(this.pinEntry === this.pinFirst){
+        state.parentPin = this.pinFirst;
+        save();
+        this.openDash();
+      }else{
+        this.toast("PINs didn't match, try again");
+        this.pinMode = "set";
+        this.pinEntry = ""; this.pinFirst = "";
+        document.getElementById("pinHint").textContent = "Create a 4-digit parent PIN";
+        this.updatePinDisplay();
+      }
+      return;
+    }
+    // enter mode
+    if(this.pinEntry === state.parentPin){
+      this.openDash();
+    }else{
+      this.toast("Wrong PIN");
+      this.pinEntry = "";
+      this.updatePinDisplay();
+    }
+  },
+
+  openDash(){
+    document.getElementById("pinSection").style.display = "none";
+    document.getElementById("parentDash").style.display = "block";
+    document.getElementById("stSessions").textContent = state.sessions;
+    document.getElementById("stKeys").textContent = state.keys.length+" / "+SCRIPTURES.length;
+    const unlockedCount = INSTRUMENTS.filter(i=>state.sessions>=i.unlock).length;
+    document.getElementById("stInst").textContent = unlockedCount+" / "+INSTRUMENTS.length;
+    // favorite instrument
+    let fav = "—", max = 0;
+    Object.keys(state.instUses).forEach(id=>{
+      if(state.instUses[id] > max){
+        max = state.instUses[id];
+        const inst = INSTRUMENTS.find(x=>x.id===id);
+        fav = inst ? inst.name.replace(/\n/g," ") : id;
+      }
+    });
+    document.getElementById("stFav").textContent = fav;
+  },
+
+  exitParent(){ this.show("splash"); },
+
+  resetProgress(){
+    if(confirm("Reset ALL progress? This cannot be undone.")){
+      state = {character:null,sessions:0,keys:[],instUses:{},parentPin:state.parentPin};
+      save();
+      this.toast("Progress reset");
+      this.renderCharacters();
+      this.updateKeyCount();
+      this.openDash();
+    }
+  }
+};
+
+window.addEventListener("DOMContentLoaded", ()=>App.init());
+</script>
+</body>
+</html>
